@@ -1,7 +1,7 @@
 trf4php-doctrine
 ==============
 
-This is a Doctrine binding for trf4php.
+This is a Doctrine binding for [trf4php](https://github.com/szjani/trf4php)
 
 Using trf4php-doctrine
 ----------------------
