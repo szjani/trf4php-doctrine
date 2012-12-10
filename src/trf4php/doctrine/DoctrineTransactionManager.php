@@ -62,6 +62,7 @@ class DoctrineTransactionManager implements TransactionManager
     public function commit()
     {
         try {
+            $this->entityManager->flush();
             $this->entityManager->commit();
         } catch (ConnectionException $e) {
             throw new TransactionException($e->getMessage(), $e->getCode(), $e);
