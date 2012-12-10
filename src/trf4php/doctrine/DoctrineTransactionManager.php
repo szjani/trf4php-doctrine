@@ -76,6 +76,7 @@ class DoctrineTransactionManager implements TransactionManager
     {
         try {
             $this->entityManager->rollback();
+            $this->entityManager->close();
         } catch (ConnectionException $e) {
             throw new TransactionException($e->getMessage(), $e->getCode(), $e);
         }

@@ -26,8 +26,9 @@ namespace trf4php\doctrine;
 use Doctrine\ORM\Configuration;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\Tools\SchemaTool;
-use trf4php\doctrine\entities\User;
+use Doctrine\ORM\UnitOfWork;
 use PHPUnit_Framework_TestCase;
+use trf4php\doctrine\entities\User;
 
 require_once __DIR__ . '/entities/User.php';
 
@@ -109,10 +110,8 @@ class DoctrineTransactionManagerTest extends PHPUnit_Framework_TestCase
         $user->setName('mod');
         $this->entityManager->flush();
         $this->transactionManager->rollback();
-        $this->entityManager->refresh($user);
-        $this->entityManager->close();
-
-        self::assertEquals(__METHOD__, $user->getName());
+        self::assertFalse($this->entityManager->isOpen());
+        self::assertEquals(UnitOfWork::STATE_DETACHED, $this->entityManager->getUnitOfWork()->getEntityState($user));
     }
 
     public function testAnonymousFunction()
