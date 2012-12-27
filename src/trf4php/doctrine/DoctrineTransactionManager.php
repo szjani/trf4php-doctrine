@@ -27,8 +27,8 @@ use Closure;
 use Doctrine\DBAL\ConnectionException;
 use Doctrine\ORM\EntityManager;
 use Exception;
+use trf4php\AbstractObservableTransactionManager;
 use trf4php\TransactionException;
-use trf4php\TransactionManager;
 
 /**
  * Doctrine implementation of TransactionManager.
@@ -36,7 +36,7 @@ use trf4php\TransactionManager;
  *
  * @author Szurovecz János <szjani@szjani.hu>
  */
-class DoctrineTransactionManager implements TransactionManager
+class DoctrineTransactionManager extends AbstractObservableTransactionManager
 {
     /**
      * @var EntityManager
@@ -48,10 +48,11 @@ class DoctrineTransactionManager implements TransactionManager
      */
     public function __construct(EntityManager $entityManager)
     {
+        parent::__construct();
         $this->entityManager = $entityManager;
     }
 
-    public function beginTransaction()
+    protected function beginTransactionInner()
     {
         $this->entityManager->beginTransaction();
     }
@@ -59,7 +60,7 @@ class DoctrineTransactionManager implements TransactionManager
     /**
      * @throws TransactionException
      */
-    public function commit()
+    protected function commitInner()
     {
         try {
             $this->entityManager->flush();
@@ -72,7 +73,7 @@ class DoctrineTransactionManager implements TransactionManager
     /**
      * @throws TransactionException
      */
-    public function rollback()
+    protected function rollbackInner()
     {
         try {
             $this->entityManager->rollback();
@@ -88,7 +89,7 @@ class DoctrineTransactionManager implements TransactionManager
      * @throws TransactionException
      * @throws Exception Throwed by $func
      */
-    public function transactional(Closure $func)
+    protected function transactionalInner(Closure $func)
     {
         try {
             return $this->entityManager->transactional($func);
