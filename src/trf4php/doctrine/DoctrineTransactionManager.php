@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (c) 2012 Szurovecz János
+ * Copyright (c) 2013 Szurovecz János
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -25,7 +25,7 @@ namespace trf4php\doctrine;
 
 use Closure;
 use Doctrine\DBAL\ConnectionException;
-use Doctrine\ORM\EntityManager;
+use Doctrine\ORM\EntityManagerInterface;
 use Exception;
 use trf4php\AbstractObservableTransactionManager;
 use trf4php\TransactionException;
@@ -39,17 +39,25 @@ use trf4php\TransactionException;
 class DoctrineTransactionManager extends AbstractObservableTransactionManager
 {
     /**
-     * @var EntityManager
+     * @var EntityManagerInterface
      */
     private $entityManager;
 
     /**
-     * @param EntityManager $entityManager
+     * @param EntityManagerInterface $entityManager
      */
-    public function __construct(EntityManager $entityManager)
+    public function __construct(EntityManagerInterface $entityManager)
     {
         parent::__construct();
         $this->entityManager = $entityManager;
+    }
+
+    /**
+     * @return \Doctrine\ORM\EntityManagerInterface
+     */
+    public function getEntityManager()
+    {
+        return $this->entityManager;
     }
 
     protected function beginTransactionInner()
