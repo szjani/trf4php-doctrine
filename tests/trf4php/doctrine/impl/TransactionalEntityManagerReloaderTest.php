@@ -23,7 +23,10 @@
 
 namespace trf4php\doctrine\impl;
 
+use Doctrine\ORM\EntityManager;
+use Doctrine\ORM\EntityManagerInterface;
 use trf4php\doctrine\DoctrineTransactionManager;
+use trf4php\doctrine\EntityManagerProxy;
 use trf4php\ObservableTransactionManager;
 
 class TransactionalEntityManagerReloaderTest extends \PHPUnit_Framework_TestCase
@@ -90,5 +93,28 @@ class TransactionalEntityManagerReloaderTest extends \PHPUnit_Framework_TestCase
             ->method('setWrapped')
             ->with(null);
         $this->reloader->update($manager, ObservableTransactionManager::POST_COMMIT);
+    }
+
+    public function testTransactional()
+    {
+        $proxy = $this->getMock('\trf4php\doctrine\EntityManagerProxy');
+        $manager = new DoctrineTransactionManager($proxy);
+        $manager->attach($this->reloader);
+
+        $trEm = $this->getMock('\Doctrine\ORM\EntityManagerInterface');
+        $this->emFactory
+            ->expects(self::once())
+            ->method('create')
+            ->will(self::returnValue($trEm));
+        $proxy
+            ->expects(self::exactly(2))
+            ->method('setWrapped');
+
+        $manager->transactional(
+            function (EntityManagerProxy $em) use ($proxy) {
+                TransactionalEntityManagerReloaderTest::assertSame($proxy, $em);
+                TransactionalEntityManagerReloaderTest::assertInstanceOf('\Doctrine\ORM\EntityManagerInterface', $em->getWrapped());
+            }
+        );
     }
 }
