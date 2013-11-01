@@ -61,10 +61,10 @@ class TransactionalEntityManagerReloader implements TransactionManagerObserver
                 break;
             case ObservableTransactionManager::POST_ROLLBACK:
             case ObservableTransactionManager::ERROR_ROLLBACK:
-                $proxy->close();
             case ObservableTransactionManager::POST_COMMIT:
             case ObservableTransactionManager::POST_TRANSACTIONAL:
                 $proxy->setWrapped(null);
+                break;
         }
     }
 }

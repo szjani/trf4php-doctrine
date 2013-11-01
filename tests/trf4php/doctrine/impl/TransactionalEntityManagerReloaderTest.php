@@ -23,8 +23,11 @@
 
 namespace trf4php\doctrine\impl;
 
+use Closure;
+use Doctrine\DBAL\ConnectionException;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\EntityManagerInterface;
+use Exception;
 use trf4php\doctrine\DoctrineTransactionManager;
 use trf4php\doctrine\EntityManagerProxy;
 use trf4php\ObservableTransactionManager;
@@ -68,6 +71,7 @@ class TransactionalEntityManagerReloaderTest extends \PHPUnit_Framework_TestCase
     {
         $em = $this->getMock('\trf4php\doctrine\EntityManagerProxy');
         $manager = new DoctrineTransactionManager($em);
+        $manager->attach($this->reloader);
 
         $trEm = $this->getMock('\Doctrine\ORM\EntityManagerInterface');
 
@@ -80,19 +84,121 @@ class TransactionalEntityManagerReloaderTest extends \PHPUnit_Framework_TestCase
             ->method('setWrapped')
             ->with($trEm);
 
-        $this->reloader->update($manager, ObservableTransactionManager::PRE_BEGIN_TRANSACTION);
+        $manager->beginTransaction();
     }
 
     public function testCommit()
     {
         $em = $this->getMock('\trf4php\doctrine\EntityManagerProxy');
         $manager = new DoctrineTransactionManager($em);
+        $manager->attach($this->reloader);
 
         $em
             ->expects(self::once())
             ->method('setWrapped')
             ->with(null);
-        $this->reloader->update($manager, ObservableTransactionManager::POST_COMMIT);
+        $manager->commit();
+    }
+
+    public function testRollback()
+    {
+        $em = $this->getMock('\trf4php\doctrine\EntityManagerProxy');
+        $manager = new DoctrineTransactionManager($em);
+        $manager->attach($this->reloader);
+
+        $em
+            ->expects(self::once())
+            ->method('close');
+
+        $em
+            ->expects(self::once())
+            ->method('setWrapped')
+            ->with(null);
+
+        $manager->rollback();
+    }
+
+    /**
+     * @expectedException \trf4php\TransactionException
+     */
+    public function testCommitFails()
+    {
+        $em = $this->getMock('\trf4php\doctrine\EntityManagerProxy');
+        $manager = new DoctrineTransactionManager($em);
+        $manager->attach($this->reloader);
+
+        $em
+            ->expects(self::once())
+            ->method('commit')
+            ->will(self::throwException(new ConnectionException()));
+
+        $em
+            ->expects(self::once())
+            ->method('close');
+
+        $em
+            ->expects(self::once())
+            ->method('setWrapped')
+            ->with(null);
+
+        try {
+            $manager->commit();
+        } catch (Exception $e) {
+            $manager->rollback();
+            throw $e;
+        }
+    }
+
+    /**
+     * @expectedException \Exception
+     */
+    public function testImplicitFailedTransaction()
+    {
+        $em = $this->getMock('\trf4php\doctrine\EntityManagerProxy');
+        $manager = new DoctrineTransactionManager($em);
+        $manager->attach($this->reloader);
+
+        $em
+            ->expects(self::once())
+            ->method('close');
+
+        $em
+            ->expects(self::exactly(2))
+            ->method('setWrapped');
+
+        try {
+            $manager->beginTransaction();
+            throw new Exception();
+        } catch (Exception $e) {
+            $manager->rollback();
+            throw $e;
+        }
+    }
+
+    /**
+     * @expectedException \trf4php\TransactionException
+     */
+    public function testRollbackFails()
+    {
+        $em = $this->getMock('\trf4php\doctrine\EntityManagerProxy');
+        $manager = new DoctrineTransactionManager($em);
+        $manager->attach($this->reloader);
+
+        $em
+            ->expects(self::once())
+            ->method('rollback')
+            ->will(self::throwException(new ConnectionException()));
+
+        $em
+            ->expects(self::once())
+            ->method('close');
+
+        $em
+            ->expects(self::once())
+            ->method('setWrapped')
+            ->with(null);
+
+        $manager->rollback();
     }
 
     public function testTransactional()
@@ -111,9 +217,40 @@ class TransactionalEntityManagerReloaderTest extends \PHPUnit_Framework_TestCase
             ->method('setWrapped');
 
         $manager->transactional(
-            function (EntityManagerProxy $em) use ($proxy) {
+            function (EntityManagerProxy $em) use ($proxy, $trEm) {
                 TransactionalEntityManagerReloaderTest::assertSame($proxy, $em);
-                TransactionalEntityManagerReloaderTest::assertInstanceOf('\Doctrine\ORM\EntityManagerInterface', $em->getWrapped());
+                TransactionalEntityManagerReloaderTest::assertSame($trEm, $em->getWrapped());
+            }
+        );
+    }
+
+    public function testTransactionalFails()
+    {
+        $proxy = new DefaultEntityManagerProxy();
+        $manager = new DoctrineTransactionManager($proxy);
+        $manager->attach($this->reloader);
+
+        $trEm = $this->getMock('\Doctrine\ORM\EntityManagerInterface');
+        $this->emFactory
+            ->expects(self::once())
+            ->method('create')
+            ->will(self::returnValue($trEm));
+
+        $trEm
+            ->expects(self::once())
+            ->method('transactional')
+            ->will(
+                self::returnCallback(
+                    function (Closure $closure) use ($proxy) {
+                        return call_user_func($closure, $proxy);
+                    }
+                )
+            );
+
+        $manager->transactional(
+            function (EntityManagerProxy $em) use ($proxy, $trEm) {
+                TransactionalEntityManagerReloaderTest::assertSame($proxy, $em);
+                TransactionalEntityManagerReloaderTest::assertSame($trEm, $em->getWrapped());
             }
         );
     }

@@ -84,8 +84,8 @@ class DoctrineTransactionManager extends AbstractObservableTransactionManager
     protected function rollbackInner()
     {
         try {
-            $this->entityManager->rollback();
             $this->entityManager->close();
+            $this->entityManager->rollback();
         } catch (ConnectionException $e) {
             throw new TransactionException($e->getMessage(), $e->getCode(), $e);
         }
@@ -95,7 +95,7 @@ class DoctrineTransactionManager extends AbstractObservableTransactionManager
      * @param Closure $func
      * @return mixed
      * @throws TransactionException
-     * @throws Exception Throwed by $func
+     * @throws Exception Thrown by $func
      */
     protected function transactionalInner(Closure $func)
     {
