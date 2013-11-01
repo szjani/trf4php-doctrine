@@ -1,6 +1,11 @@
 trf4php-doctrine
 ==============
 
+[![Latest Stable Version](https://poser.pugx.org/trf4php/trf4php-doctrine/v/stable.png)](https://packagist.org/packages/trf4php/trf4php-doctrine)
+
+master: [![Build Status](https://travis-ci.org/szjani/trf4php-doctrine.png?branch=master)](https://travis-ci.org/szjani/trf4php-doctrine) [![Coverage Status](https://coveralls.io/repos/szjani/trf4php-doctrine/badge.png?branch=master)](https://coveralls.io/r/szjani/trf4php-doctrine?branch=master)
+1.2: [![Build Status](https://travis-ci.org/szjani/trf4php-doctrine.png?branch=1.2)](https://travis-ci.org/szjani/trf4php-doctrine) [![Coverage Status](https://coveralls.io/repos/szjani/trf4php-doctrine/badge.png?branch=1.2)](https://coveralls.io/r/szjani/trf4php-doctrine?branch=1.2)
+
 This is a Doctrine binding for [trf4php](https://github.com/szjani/trf4php)
 
 Using trf4php-doctrine
