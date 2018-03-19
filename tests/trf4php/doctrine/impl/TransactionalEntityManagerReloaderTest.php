@@ -1,25 +1,5 @@
 <?php
-/*
- * Copyright (c) 2013 Szurovecz János
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy of
- * this software and associated documentation files (the "Software"), to deal in
- * the Software without restriction, including without limitation the rights to
- * use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
- * of the Software, and to permit persons to whom the Software is furnished to do
- * so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
- */
+declare(strict_types=1);
 
 namespace trf4php\doctrine\impl;
 
@@ -28,11 +8,13 @@ use Doctrine\DBAL\ConnectionException;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\EntityManagerInterface;
 use Exception;
+use PHPUnit\Framework\TestCase;
 use trf4php\doctrine\DoctrineTransactionManager;
+use trf4php\doctrine\EntityManagerFactory;
 use trf4php\doctrine\EntityManagerProxy;
 use trf4php\ObservableTransactionManager;
 
-class TransactionalEntityManagerReloaderTest extends \PHPUnit_Framework_TestCase
+class TransactionalEntityManagerReloaderTest extends TestCase
 {
     /**
      * @var TransactionalEntityManagerReloader
@@ -44,7 +26,7 @@ class TransactionalEntityManagerReloaderTest extends \PHPUnit_Framework_TestCase
     public function setUp()
     {
         parent::setUp();
-        $this->emFactory = $this->getMock('\trf4php\doctrine\EntityManagerFactory');
+        $this->emFactory = $this->getMockBuilder(EntityManagerFactory::class)->getMock();
         $this->reloader = new TransactionalEntityManagerReloader($this->emFactory);
     }
 
@@ -53,7 +35,7 @@ class TransactionalEntityManagerReloaderTest extends \PHPUnit_Framework_TestCase
      */
     public function testNotDoctrineTransactionManager()
     {
-        $manager = $this->getMock('\trf4php\ObservableTransactionManager');
+        $manager = $this->getMockBuilder(ObservableTransactionManager::class)->getMock();
         $this->reloader->update($manager, 'any');
     }
 
@@ -62,18 +44,18 @@ class TransactionalEntityManagerReloaderTest extends \PHPUnit_Framework_TestCase
      */
     public function testNotProxy()
     {
-        $em = $this->getMock('\Doctrine\ORM\EntityManagerInterface');
+        $em = $this->getMockBuilder(EntityManagerInterface::class)->getMock();
         $manager = new DoctrineTransactionManager($em);
         $this->reloader->update($manager, 'any');
     }
 
     public function testStartTransaction()
     {
-        $em = $this->getMock('\trf4php\doctrine\EntityManagerProxy');
+        $em = $this->getMockBuilder(EntityManagerProxy::class)->getMock();
         $manager = new DoctrineTransactionManager($em);
         $manager->attach($this->reloader);
 
-        $trEm = $this->getMock('\Doctrine\ORM\EntityManagerInterface');
+        $trEm = $this->getMockBuilder(EntityManagerInterface::class)->getMock();
 
         $this->emFactory
             ->expects(self::once())
@@ -89,7 +71,7 @@ class TransactionalEntityManagerReloaderTest extends \PHPUnit_Framework_TestCase
 
     public function testCommit()
     {
-        $em = $this->getMock('\trf4php\doctrine\EntityManagerProxy');
+        $em = $this->getMockBuilder(EntityManagerProxy::class)->getMock();
         $manager = new DoctrineTransactionManager($em);
         $manager->attach($this->reloader);
 
@@ -102,7 +84,7 @@ class TransactionalEntityManagerReloaderTest extends \PHPUnit_Framework_TestCase
 
     public function testRollback()
     {
-        $em = $this->getMock('\trf4php\doctrine\EntityManagerProxy');
+        $em = $this->getMockBuilder(EntityManagerProxy::class)->getMock();
         $manager = new DoctrineTransactionManager($em);
         $manager->attach($this->reloader);
 
@@ -123,7 +105,7 @@ class TransactionalEntityManagerReloaderTest extends \PHPUnit_Framework_TestCase
      */
     public function testCommitFails()
     {
-        $em = $this->getMock('\trf4php\doctrine\EntityManagerProxy');
+        $em = $this->getMockBuilder(EntityManagerProxy::class)->getMock();
         $manager = new DoctrineTransactionManager($em);
         $manager->attach($this->reloader);
 
@@ -154,7 +136,7 @@ class TransactionalEntityManagerReloaderTest extends \PHPUnit_Framework_TestCase
      */
     public function testImplicitFailedTransaction()
     {
-        $em = $this->getMock('\trf4php\doctrine\EntityManagerProxy');
+        $em = $this->getMockBuilder(EntityManagerProxy::class)->getMock();
         $manager = new DoctrineTransactionManager($em);
         $manager->attach($this->reloader);
 
@@ -180,7 +162,7 @@ class TransactionalEntityManagerReloaderTest extends \PHPUnit_Framework_TestCase
      */
     public function testRollbackFails()
     {
-        $em = $this->getMock('\trf4php\doctrine\EntityManagerProxy');
+        $em = $this->getMockBuilder(EntityManagerProxy::class)->getMock();
         $manager = new DoctrineTransactionManager($em);
         $manager->attach($this->reloader);
 
@@ -203,11 +185,11 @@ class TransactionalEntityManagerReloaderTest extends \PHPUnit_Framework_TestCase
 
     public function testTransactional()
     {
-        $proxy = $this->getMock('\trf4php\doctrine\EntityManagerProxy');
+        $proxy = $this->getMockBuilder(EntityManagerProxy::class)->getMock();
         $manager = new DoctrineTransactionManager($proxy);
         $manager->attach($this->reloader);
 
-        $trEm = $this->getMock('\Doctrine\ORM\EntityManagerInterface');
+        $trEm = $this->getMockBuilder(EntityManagerInterface::class)->getMock();
         $this->emFactory
             ->expects(self::once())
             ->method('create')
@@ -230,7 +212,7 @@ class TransactionalEntityManagerReloaderTest extends \PHPUnit_Framework_TestCase
         $manager = new DoctrineTransactionManager($proxy);
         $manager->attach($this->reloader);
 
-        $trEm = $this->getMock('\Doctrine\ORM\EntityManagerInterface');
+        $trEm = $this->getMockBuilder(EntityManagerInterface::class)->getMock();
         $this->emFactory
             ->expects(self::once())
             ->method('create')

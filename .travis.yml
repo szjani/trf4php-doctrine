@@ -1,12 +1,8 @@
 language: php
 
-env:
-  - OPCODE_CACHE=apc
-
 php:
-  - 5.3
-  - 5.4
-  - 5.5
+  - 7.1
+  - 7.2
 
 before_script:
   - wget http://getcomposer.org/composer.phar
